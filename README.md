@@ -1,4 +1,4 @@
-# Nasdaq MA225 신호
+﻿# Nasdaq MA225 신호
 
 QQQ 종가 vs 225일 이동평균으로 오늘 국내장에서 할 행동을 알려주는 스크립트.
 
@@ -14,8 +14,7 @@ QQQ 종가 vs 225일 이동평균으로 오늘 국내장에서 할 행동을 알
 - 미국 d일 종가로 판정 → 국내 d 다음 거래일에 체결
 
 ```bash
-pip install -r requirements.txt
-python signal_daily.py
+python signal_daily.py   # 표준 라이브러리만 사용, 설치 불필요
 ```
 
 출력 첫 줄이 알림용 한 줄 요약이다. 평일 아침 Claude Code 클라우드 루틴이 실행해 푸시로 보낸다.
