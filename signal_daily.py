@@ -89,13 +89,11 @@ def main() -> None:
     stale = f" ⚠️미국 데이터 {age}일 지연" if age > STALE_DAYS else ""
     flag = "🔔전환" if switch else "✅유지"
 
-    # 최근 1개월 추세: QQQ 미니 차트 + 기간 등락 + 이격도 변화
-    k = -TREND_DAYS - 1                      # 21거래일 전 종가를 기준점으로
-    trend_px = px[k:]
-    chg = trend_px[-1] / trend_px[0] - 1
-    gap_then = px[k] / ma[k] - 1
-    trend = (f"1개월 {sparkline(trend_px)} {chg:+.1%} "
-             f"(이격 {gap_then:+.1%}→{gap:+.1%})")
+    # 최근 1개월 추세: MA225 이격도(종가/MA − 1) 미니 차트 + 시작→현재 이격도.
+    # 차트는 1개월 구간의 최저~최고로 그린 상대 모양이라 0%(전환선) 위치는 나타나지 않는다.
+    k = -TREND_DAYS - 1                      # 21거래일 전을 기준점으로
+    gaps = [p / mm - 1 for p, mm in zip(px[k:], ma[k:])]
+    trend = f"이격 1개월 {sparkline(gaps)} {gaps[0]:+.1%}→{gap:+.1%}"
 
     # 1줄 요약 (푸시 본문, 200자 이내)
     print(f"{flag} {action} | QQQ {p_now:,.2f} vs MA225 {m:,.2f} ({gap:+.2%}) "
