@@ -27,6 +27,8 @@ MA = 225
 PRODUCT_2X = "TIGER 미국나스닥100레버리지(합성) 418660"
 PRODUCT_1X = "TIGER 미국나스닥100 133690"
 STALE_DAYS = 4          # 마지막 미국 거래일이 이보다 오래되면 데이터 지연 경고
+TREND_DAYS = 21         # 알림 미니 차트 = 최근 1개월(거래일 21일)
+SPARK = "▁▂▃▄▅▆▇█"
 KST = timezone(timedelta(hours=9))
 URLS = [f"https://{host}/v8/finance/chart/QQQ?range=2y&interval=1d&events=div%2Csplit"
         for host in ("query1.finance.yahoo.com", "query2.finance.yahoo.com")]
@@ -61,6 +63,14 @@ def download_qqq() -> list[tuple[date, float]]:
     raise RuntimeError(f"QQQ 다운로드 실패: {last_err}")
 
 
+def sparkline(values: list[float]) -> str:
+    """값 목록을 ▁▂▃▄▅▆▇█ 8단계 글자 차트로 (푸시 알림은 텍스트만 가능)."""
+    lo, hi = min(values), max(values)
+    if hi == lo:
+        return SPARK[3] * len(values)
+    return "".join(SPARK[round((v - lo) / (hi - lo) * (len(SPARK) - 1))] for v in values)
+
+
 def main() -> None:
     rows = download_qqq()
     dates = [d for d, _ in rows]
@@ -79,9 +89,17 @@ def main() -> None:
     stale = f" ⚠️미국 데이터 {age}일 지연" if age > STALE_DAYS else ""
     flag = "🔔전환" if switch else "✅유지"
 
-    # 1줄 요약 (푸시 본문)
+    # 최근 1개월 추세: QQQ 미니 차트 + 기간 등락 + 이격도 변화
+    k = -TREND_DAYS - 1                      # 21거래일 전 종가를 기준점으로
+    trend_px = px[k:]
+    chg = trend_px[-1] / trend_px[0] - 1
+    gap_then = px[k] / ma[k] - 1
+    trend = (f"1개월 {sparkline(trend_px)} {chg:+.1%} "
+             f"(이격 {gap_then:+.1%}→{gap:+.1%})")
+
+    # 1줄 요약 (푸시 본문, 200자 이내)
     print(f"{flag} {action} | QQQ {p_now:,.2f} vs MA225 {m:,.2f} ({gap:+.2%}) "
-          f"[미국 {d:%m/%d} 종가]{stale}")
+          f"[미국 {d:%m/%d} 종가]{stale} | {trend}")
 
     # 상세
     i = len(up) - 1
